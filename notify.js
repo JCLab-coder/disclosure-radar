@@ -19,6 +19,7 @@ const WATCHLIST = {
   '005930': '삼성전자',
   '035720': '카카오',
   '247540': '에코프로비엠',
+  '005380': '현대차',
 };
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
