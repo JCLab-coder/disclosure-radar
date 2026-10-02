@@ -48,7 +48,7 @@ function saveSent(sent) {
 // 하루에 보낸 메시지 수. 공시 날짜가 아니라 보내는 날(KST) 기준으로 센다.
 // 날짜가 바뀌면 0부터 다시 센다. 읽기·쓰기는 sent.json 과 같이 sent.lock 안에서만 한다.
 const COUNT_FILE = new URL('sent-count.json', STATE_DIR);
-const DAILY_LIMIT = 30;
+const DAILY_LIMIT = 20;
 
 function loadCount(today) {
   let data;
