@@ -8,6 +8,8 @@
 ## 보관함
 
 - 옵시디언 보관함 이름은 `wiki`, 경로는 저장소의 `wiki/` 폴더다(`obsidian vaults verbose`). 2026-10-03 파일 18개, 폴더 3개(`obsidian vault`).
+- 이 페이지의 수(파일 18개, [[index]] 백링크 17개, 그래프 노드 19개)는 이 페이지와 [[quoted-link-unresolved]] 를 더하기 전(커밋 `5fef260`)의 값이다. 2026-10-03 위키 점검 때(커밋 `550e667`) 위키 `.md` 는 20개였고(`find wiki -name '*.md'`, `git ls-files wiki` 둘 다), [[index]] 는 다른 19개 모두에서 링크를 받았다. 이것은 옵시디언이 아니라 파일을 읽는 스크립트로 셌다.
+- 2026-10-03 위키 점검 때 이 컴퓨터의 `obsidian vaults verbose` 에는 이름이 같은 `wiki` 보관함 하나만 있었고, 그 경로는 다른 폴더(이 저장소 밖)였다. 이 저장소의 `wiki/` 는 등록돼 있지 않아 `obsidian vault=wiki …` 가 다른 보관함을 봤다. 그래서 아래 명령은 다시 돌리지 못했다. 다시 쓰려면 옵시디언에서 이 저장소의 `wiki/` 를 보관함으로 연다. 이름이 겹치므로 `vault=` 로 고를 때 주의한다.
 - 옵시디언 설정은 `wiki/.obsidian/` 에 있고 커밋하지 않는다([[env-not-committed]], `.gitignore` 6번째 줄). 그래서 아래 그래프 설정은 이 컴퓨터에만 있다.
 
 ## obsidian 명령 (2026-10-03 직접 돌려 봄)

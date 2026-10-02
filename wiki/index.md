@@ -8,12 +8,12 @@
 
 - [[markets-filter]] (사용자): 공시 목록은 유가·코스닥만. 건수가 적다는 말이 나와도 넓히지 않는다.
 - [[file-structure]] (사용자): 코드는 `dart.js`(조회)·`index.js`(목록)·`notify.js`(알림) 셋. 조회 코드를 `notify.js` 로 합치지 않는다.
-- [[watchlist-telegram]] (항목마다): 관심 종목 셋(삼성전자·카카오·에코프로비엠)의 공시를 종목코드로 골라, 한 번 실행에 메시지 하나로 텔레그램에 보낸다(4096자 넘으면 나눔).
+- [[watchlist-telegram]] (항목마다): 관심 종목 넷(삼성전자·카카오·에코프로비엠·현대차)의 공시를 종목코드로 골라, 한 번 실행에 메시지 하나로 텔레그램에 보낸다(4096자 넘으면 나눔).
 - [[telegram-library]] (사용자): 전송은 `node-telegram-bot-api` 의 `sendMessage()`.
 - [[disclosure-summary]] (항목마다): 공시 원문을 OpenRouter `google/gemini-2.5-flash-lite` 로 세 줄 요약해 넣는다. 실패하면 요약 없이 보낸다.
 - [[sent-dedup]] (사용자, 방법은 AI 기본값): 보낸 접수번호를 `sent.json` 에 남겨 다시 보내지 않는다. 동시 실행은 `sent.lock` 으로 막는다.
 - [[daily-message-limit]] (사용자, 세부는 AI 기본값): 하루(보내는 날, KST) 메시지 20개까지. 센 값은 `sent-count.json`. 못 보낸 공시는 다음 날 간다.
-- [[railway-deploy]] (항목마다): Railway 에서 KST 평일 08:00~19:00 30분마다 `node notify.js`. 키는 서버 변수, 상태 파일은 볼륨 `/data`(`STATE_DIR`).
+- [[railway-deploy]] (항목마다): Railway 에서 KST 평일 08:00~19:00 30분마다 `node notify.js`. 키는 서버 변수, 상태 파일은 볼륨 `/data`(`STATE_DIR`). 2026-10-03 서버에는 현대차 추가가 아직 반영되지 않았다.
 - [[wiki-check-hook]] (사용자, 방법은 AI 기본값): 커밋 전 훅(`.githooks/`)이 변경 기록 지난 줄, 결정 페이지 근거 줄, 없는 페이지 링크(`scripts/check-wiki.mjs`)와 커밋·커밋 메시지에 든 `.env` 실제 값(`scripts/check-secrets.mjs`, 값은 찍지 않음)을 점검해 막는다. 점검 스크립트는 마지막 커밋에 있는 것을 돌리고, 점검 장치·규칙 파일이 바뀌는 커밋은 메시지에 `[점검·규칙 변경]` 을 붙인다(`scripts/check-guard.mjs`). 새로 받은 저장소에서는 `git config core.hooksPath .githooks` 로 켠다.
 - [[env-not-committed]] (항목마다): `.env`·`node_modules/`·`wiki/.obsidian/` 은 커밋하지 않는다. 비밀값은 위키에도 적지 않는다.
 - [[quoted-link-unresolved]] (사용자): [[wiki-check-hook]] 근거 원문 큰따옴표 안의 `[[링크]]` 는 옵시디언에서 없는 링크(그래프의 연한 점)로 보여도 그대로 둔다.

@@ -34,7 +34,8 @@
 - 크론 실행마다 새 컨테이너가 뜨지만 볼륨 파일은 남는다(1번째 실행이 쓴 `sent.json` 을 2번째 실행이 읽었다).
 - `railway volume files --volume <이름> list /` 는 크론 서비스(떠 있는 컨테이너 없음)에서 "Failed to initialize SFTP session … Timeout" 으로 실패했다.
 - 서비스 설정의 시작 명령을 바꾼 뒤에는 `railway up` 으로 다시 배포해야 실행에 반영됐다. `railway deployment redeploy` 는 이전 배포의 설정을 그대로 가져가서, 서비스 설정에서 바꾼 시작 명령이 반영되지 않았다(`deployment.meta.serviceManifest.deploy.startCommand` 가 이전 값, `reason` `redeploy`). 1번 봤다.
-- `railway up` 은 `.gitignore` 에 있는 파일을 빼고 올린다. 커밋하지 않았어도 `.gitignore` 에 없는 파일(이 프로젝트에서는 `wiki/.obsidian/`)은 올라간다.
+- `railway up` 은 `.gitignore` 에 있는 파일을 빼고 올린다. 커밋하지 않았어도 `.gitignore` 에 없는 파일은 올라간다. 이 프로젝트에서는 배포 `a056c97d` 때 `wiki/.obsidian/` 이 그렇게 올라갔다([[railway-deploy]] 확인 칸).
+  - 2026-10-03 위키 점검 때 고침: 처음에는 "`wiki/.obsidian/` 은 올라간다"고 지금 일처럼 적었다. 그 뒤 커밋 `d42b4a9` 에서 `wiki/.obsidian/` 이 `.gitignore` 6번째 줄에 들어갔다. 그래서 다음 `railway up` 부터는 빠질 것이다. 이후 배포에서 실제로 빠졌는지는 확인하지 않았다.
 
 ## 확인하지 않은 것
 

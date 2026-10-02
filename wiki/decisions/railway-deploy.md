@@ -25,6 +25,7 @@
 
 - 서버와 로컬은 상태 파일을 따로 가진다. 같은 날 로컬에서 `node notify.js` 를 돌리면 서버가 이미 보낸 공시가 다시 가고, 하루 20개도 따로 센다. [[sent-dedup]]·[[daily-message-limit]] 의 "다른 컴퓨터나 다른 폴더에서 같은 봇으로 실행하는 경우"에 해당한다.
 - 서버 볼륨의 `sent.json` 은 빈 상태로 시작했다. 로컬 `sent.json` 은 옮기지 않았다. 서버는 그날(KST) 공시만 보므로, 로컬에서 이미 보낸 지난 날짜 공시가 서버에서 다시 가지는 않는다.
+- 2026-10-03 위키 점검 때 서버는 현대차 추가([[watchlist-telegram]], 커밋 `550e667`, KST 03:11)를 반영하지 않은 상태였다. 마지막 배포 `5c24e175` 가 KST 02:14 에 만들어졌기 때문이다(`railway deployment list --json` 의 `createdAt` `2026-10-02T17:14:50Z`). 그래서 서버는 관심 종목 셋, 로컬은 넷을 본다. 서버 파일을 직접 열어 보지는 않았고 배포 시각으로 판단했다. 사용자가 반영을 요청했지만, 이 세션의 `railway up` 은 Claude Code 자동 모드의 권한 판정("Production Deploy")에서 막혀 실행되지 않았다. 반영하려면 사용자가 `railway up --ci -s disclosure-radar -e production` 을 돌린다.
 
 ## 확인
 
