@@ -1,0 +1,34 @@
+#!/bin/sh
+# 이 저장소의 commit-msg 훅. 커밋 메시지에 .env 의 실제 값이 들어가면 막고,
+# 점검 장치나 규칙 파일이 바뀌는 커밋이면 메시지에 표시를 붙인다.
+# pre-commit 과 같이 전역 commit-msg 가 있으면 먼저 부른다.
+
+global=$(git config --global --get core.hooksPath)
+case "$global" in "~/"*) global="$HOME/${global#~/}" ;; esac
+if [ -n "$global" ] && [ -x "$global/commit-msg" ]; then
+  here=$(cd "$(dirname "$0")" && pwd -P)
+  there=$(cd "$global" && pwd -P)
+  if [ "$here" != "$there" ]; then
+    "$global/commit-msg" "$@" || exit 1
+  fi
+fi
+
+# pre-commit 과 같이 마지막 커밋(HEAD)에 있는 스크립트를 돌린다.
+tmp=$(mktemp -d) || exit 1
+trap 'rm -rf "$tmp"' EXIT
+run() {
+  name=$1; shift
+  if git cat-file -e "HEAD:scripts/$name" 2>/dev/null; then
+    git show "HEAD:scripts/$name" > "$tmp/$name" || return 1
+  elif git cat-file -e ":scripts/$name" 2>/dev/null; then
+    echo "scripts/$name 이 마지막 커밋에 없어 스테이지된 것을 돌립니다." >&2
+    git show ":scripts/$name" > "$tmp/$name" || return 1
+  else
+    echo "scripts/$name 이 없어 커밋하지 않는다." >&2
+    return 1
+  fi
+  node "$tmp/$name" "$@"
+}
+
+run check-secrets.mjs "$1" || exit 1
+run check-guard.mjs "$1"

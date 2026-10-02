@@ -58,6 +58,7 @@ done
 
    - 목차: `wiki/decisions`·`references`·`lessons` 의 페이지가 모두 [[index]] 에 있는지 본다. 디스크와 `git ls-files wiki` 의 `.md` 수가 같은지 본다(커밋하지 않은 페이지).
    - `diff CLAUDE.md AGENTS.md` 가 비어 있는지.
+   - (2026-10-03 덧붙임) `starter/` 가 원본과 맞는지([[wiki-starter]]): `diff -r scripts starter/scripts && diff -r .githooks starter/.githooks` 는 비어 있어야 하고, `diff CLAUDE.md starter/rules.md` 는 첫 줄과 규칙 9·10 만 달라야 한다. 이 칸의 위키 점검 절차나 [[wiki-check-hook]] 를 바꿨으면 `starter/wiki/` 의 같은 페이지에도 옮겼는지 본다.
 3. 결정 대 코드: 결정 페이지의 "결정" 항목을 하나씩 코드와 맞춰 본다. 값이 코드에 있는 것은 그 줄을 찾아 비교한다. 2026-10-03 에 본 것: `MARKETS`, `WATCHLIST`, `SUMMARY_MODEL`·`SUMMARY_INPUT_CHARS`·`SUMMARY_MAX_TOKENS`·`temperature`, `DAILY_LIMIT`, `LOCK_WAIT_MS`·`LOCK_POLL_MS`·`wx`·자기 pid, `STATE_DIR`, `WEEKDAY_HOURS_ONLY`·19:30, `.env` 없으면 넘어가기, `Api`·`maxRetries: 0`, 파일 맨 위 주석.
 4. 설정:
    - `git check-ignore -v sent.json sent-count.json sent.lock .env wiki/.obsidian/app.json`: 위키에 적은 `.gitignore` 줄 번호와 맞는지.

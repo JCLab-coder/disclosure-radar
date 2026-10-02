@@ -17,6 +17,7 @@
 - [[wiki-check-hook]] (사용자, 방법은 AI 기본값): 커밋 전 훅(`.githooks/`)이 변경 기록 지난 줄, 결정 페이지 근거 줄, 없는 페이지 링크(`scripts/check-wiki.mjs`)와 커밋·커밋 메시지에 든 `.env` 실제 값(`scripts/check-secrets.mjs`, 값은 찍지 않음)을 점검해 막는다. 점검 스크립트는 마지막 커밋에 있는 것을 돌리고, 점검 장치·규칙 파일이 바뀌는 커밋은 메시지에 `[점검·규칙 변경]` 을 붙인다(`scripts/check-guard.mjs`). 새로 받은 저장소에서는 `git config core.hooksPath .githooks` 로 켠다.
 - [[env-not-committed]] (항목마다): `.env`·`node_modules/`·`wiki/.obsidian/` 은 커밋하지 않는다. 비밀값은 위키에도 적지 않는다.
 - [[wiki-lint]] (사용자, 시점·방법은 AI 기본값): 위키를 코드·설정·서버와 대조하는 점검 절차. 작업을 시작할 때 가벼운 점검(위키를 고치지 않고 다른 파일만 바꾼 커밋 찾기), 요청할 때 전체 점검, 배포 전후에 서버 칸. 읽기만 하고 보고한 뒤 고친다. 점검 기록이 이 페이지에 있다(`CLAUDE.md` 규칙 12).
+- [[wiki-starter]] (사용자, 방법은 AI 기본값): 위키 방식(규칙 파일, 위키 뼈대, 점검 스크립트와 훅, 점검 절차)을 다른 프로젝트에 넣는 `starter/`. 넣는 순서는 `starter/README.md`. 스크립트·훅은 원본과 같은 파일이고, 원본을 바꾸면 starter 도 고친다([[wiki-lint]] 전체 점검 2단계).
 - [[quoted-link-unresolved]] (사용자): [[wiki-check-hook]] 근거 원문 큰따옴표 안의 `[[링크]]` 는 옵시디언에서 없는 링크(그래프의 연한 점)로 보여도 그대로 둔다.
 
 ## 자료 (references/)
