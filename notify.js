@@ -5,10 +5,11 @@
 // 공시 조회(OpenDART 호출)는 dart.js 에 있다. 공시 목록 출력은 index.js.
 // 한 번 보낸 공시(접수번호)는 sent.json 에 남기고 다시 보내지 않는다. 새 공시가 없으면 아무것도 보내지 않는다.
 // 동시에 여러 번 실행되면 sent.lock 으로 한 번에 하나씩 돌게 한다(뒤 실행은 기다렸다가 sent.json 을 다시 읽는다).
+// 하루(보내는 날, KST)에 메시지를 20개까지만 보낸다. 센 값은 sent-count.json 에 있다. 못 보낸 공시는 다음 날 간다.
 
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { Api } from 'node-telegram-bot-api';
-import { CORP_CLS, dartUrl, dateArg, fetchAll, fetchDocumentText, prettyDate, reportName } from './dart.js';
+import { CORP_CLS, dartUrl, dateArg, fetchAll, fetchDocumentText, prettyDate, reportName, todayKST } from './dart.js';
 
 // 관심 종목. 이름으로 맞추면 '카카오'에 카카오뱅크·카카오페이까지 걸리므로 종목코드로 맞춘다.
 const WATCHLIST = {
@@ -35,6 +36,29 @@ function loadSent() {
 
 function saveSent(sent) {
   writeFileSync(SENT_FILE, `${JSON.stringify([...sent].sort(), null, 2)}\n`);
+}
+
+// 하루에 보낸 메시지 수. 공시 날짜가 아니라 보내는 날(KST) 기준으로 센다.
+// 날짜가 바뀌면 0부터 다시 센다. 읽기·쓰기는 sent.json 과 같이 sent.lock 안에서만 한다.
+const COUNT_FILE = new URL('sent-count.json', import.meta.url);
+const DAILY_LIMIT = 20;
+
+function loadCount(today) {
+  let data;
+  try {
+    data = JSON.parse(readFileSync(COUNT_FILE, 'utf8'));
+  } catch (err) {
+    if (err.code === 'ENOENT') return 0;
+    throw new Error(`sent-count.json 을 읽지 못했습니다: ${err.message}`);
+  }
+  if (!/^\d{8}$/.test(data?.date) || !Number.isInteger(data?.count) || data.count < 0) {
+    throw new Error('sent-count.json 형식이 맞지 않습니다.');
+  }
+  return data.date === today ? data.count : 0;
+}
+
+function saveCount(today, count) {
+  writeFileSync(COUNT_FILE, `${JSON.stringify({ date: today, count })}\n`);
 }
 
 // 동시에 두 번 실행되면 둘 다 같은 sent.json 을 읽고 같은 공시를 보낸다.
@@ -183,6 +207,13 @@ async function sendNew(date, all, matched) {
       `이미 보낸 것 ${matched.length - hits.length}건 빼고 새로 보낼 것 ${hits.length}건`,
   );
   if (hits.length === 0) return;
+  const today = todayKST();
+  let count = loadCount(today);
+  if (count >= DAILY_LIMIT) {
+    // 요약도 하지 않는다. 못 보낸 공시는 sent.json 에 남지 않으니 다음 날 실행에 간다.
+    console.log(`오늘(${prettyDate(today)}) 이미 메시지 ${count}개를 보내 하루 한도 ${DAILY_LIMIT}개에 닿았습니다. 보내지 않습니다.`);
+    return;
+  }
   if (OPENROUTER_KEY) {
     let cost = 0;
     for (const it of hits) {
@@ -200,18 +231,27 @@ async function sendNew(date, all, matched) {
   }
   const telegram = new Api(BOT_TOKEN, { maxRetries: 0 }); // 기존처럼 실패 시 재전송 없이 종료한다.
   const messages = buildMessages(date, hits);
+  let sentMessages = 0;
   for (const { text, items } of messages) {
+    if (count >= DAILY_LIMIT) {
+      const left = messages.slice(sentMessages).reduce((n, m) => n + m.items.length, 0);
+      console.log(`하루 한도 ${DAILY_LIMIT}개에 닿아 남은 메시지 ${messages.length - sentMessages}개(공시 ${left}건)는 보내지 않습니다.`);
+      break;
+    }
     await telegram.sendMessage({
       chat_id: CHAT_ID,
       text,
       link_preview_options: { is_disabled: true },
     });
     // 메시지 하나가 갈 때마다 남긴다. 뒤 메시지가 실패해도 이미 간 공시는 다시 보내지 않는다.
+    count += 1;
+    saveCount(today, count);
     for (const it of items) sent.add(it.rcept_no);
     saveSent(sent);
+    for (const it of items) console.log(`  포함: ${it.corp_name} — ${reportName(it)}`);
+    sentMessages += 1;
   }
-  for (const it of hits) console.log(`  포함: ${it.corp_name} — ${reportName(it)}`);
-  console.log(`메시지 ${messages.length}개로 보냄`);
+  console.log(`메시지 ${sentMessages}개로 보냄 (오늘 ${count}/${DAILY_LIMIT})`);
 }
 
 main().catch((err) => {

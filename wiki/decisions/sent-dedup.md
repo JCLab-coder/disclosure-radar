@@ -3,7 +3,7 @@
 - 정한 날: 2026-10-03
 - 누가 정함: 항목마다 다르다. 각 항목 끝 괄호에 적었다. 근거는 아래 "근거" 참고.
 - 상태: 유지
-- 관련: [[index]], [[log]], [[watchlist-telegram]], [[disclosure-summary]], [[env-not-committed]], [[concurrent-runs]]
+- 관련: [[index]], [[log]], [[watchlist-telegram]], [[disclosure-summary]], [[env-not-committed]], [[concurrent-runs]], [[daily-message-limit]]
 
 ## 결정
 
