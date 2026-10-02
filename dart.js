@@ -1,4 +1,5 @@
 // OpenDART 공시검색 API 호출. index.js(목록 출력)와 notify.js(텔레그램 알림)가 같이 쓴다.
+// 직접 실행하는 파일이 아니다. 실행은 index.js 나 notify.js 로 한다.
 
 process.loadEnvFile(new URL('.env', import.meta.url));
 

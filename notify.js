@@ -1,5 +1,6 @@
 // 관심 종목에 특정 날짜(기본: 오늘, KST)의 공시가 있으면 텔레그램으로 보낸다.
 // 사용법: node notify.js [YYYYMMDD]
+// 공시 조회(OpenDART 호출)는 dart.js 에 있다. 공시 목록 출력은 index.js.
 // 중복 처리는 아직 없다. 실행할 때마다 그날 공시를 모두 다시 보낸다.
 
 import { CORP_CLS, dartUrl, dateArg, fetchAll, prettyDate, reportName } from './dart.js';

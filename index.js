@@ -1,5 +1,6 @@
 // OpenDART 공시검색 API로 특정 날짜(기본: 오늘, KST)의 공시 목록을 가져와 출력한다.
 // 사용법: node index.js [YYYYMMDD]
+// 공시 조회(OpenDART 호출)는 dart.js 에 있다. 텔레그램 알림은 notify.js.
 
 import { CORP_CLS, dartUrl, dateArg, fetchAll, prettyDate, reportName } from './dart.js';
 
