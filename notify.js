@@ -4,6 +4,7 @@
 // 공시 조회(OpenDART 호출)는 dart.js 에 있다. 공시 목록 출력은 index.js.
 // 중복 처리는 아직 없다. 실행할 때마다 그날 공시를 모두 다시 보낸다.
 
+import { Api } from 'node-telegram-bot-api';
 import { CORP_CLS, dartUrl, dateArg, fetchAll, prettyDate, reportName } from './dart.js';
 
 // 관심 종목. 이름으로 맞추면 '카카오'에 카카오뱅크·카카오페이까지 걸리므로 종목코드로 맞춘다.
@@ -16,16 +17,6 @@ const WATCHLIST = {
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const MAX_LEN = 4096; // 텔레그램 sendMessage 글자 수 한도
-
-async function sendTelegram(text) {
-  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: CHAT_ID, text, disable_web_page_preview: true }),
-  });
-  const data = await res.json();
-  if (!data.ok) throw new Error(`텔레그램 오류 [${data.error_code}] ${data.description}`);
-}
 
 function formatItem(it) {
   const cls = CORP_CLS[it.corp_cls] ?? it.corp_cls;
@@ -65,8 +56,15 @@ async function main() {
   const hits = all.filter((it) => it.stock_code in WATCHLIST);
   console.log(`${prettyDate(date)} 관심 종목 공시 ${hits.length}건 (전체 ${all.length}건)`);
   if (hits.length === 0) return;
+  const telegram = new Api(BOT_TOKEN, { maxRetries: 0 }); // 기존처럼 실패 시 재전송 없이 종료한다.
   const messages = buildMessages(date, hits);
-  for (const text of messages) await sendTelegram(text);
+  for (const text of messages) {
+    await telegram.sendMessage({
+      chat_id: CHAT_ID,
+      text,
+      link_preview_options: { is_disabled: true },
+    });
+  }
   for (const it of hits) console.log(`  포함: ${it.corp_name} — ${reportName(it)}`);
   console.log(`메시지 ${messages.length}개로 보냄`);
 }
