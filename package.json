@@ -1,0 +1,13 @@
+{
+  "name": "disclosure-radar",
+  "version": "1.0.0",
+  "description": "OpenDART 공시검색 API로 오늘 올라온 공시 목록을 보여 준다",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=21.7"
+  }
+}
