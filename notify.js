@@ -3,8 +3,9 @@
 // 공시마다 원문을 OpenRouter(저가 모델)로 세 줄 요약해 같이 넣는다. 요약이 실패하면 요약 없이 보낸다.
 // 사용법: node notify.js [YYYYMMDD]
 // 공시 조회(OpenDART 호출)는 dart.js 에 있다. 공시 목록 출력은 index.js.
-// 중복 처리는 아직 없다. 실행할 때마다 그날 공시를 모두 다시 보낸다.
+// 한 번 보낸 공시(접수번호)는 sent.json 에 남기고 다시 보내지 않는다. 새 공시가 없으면 아무것도 보내지 않는다.
 
+import { readFileSync, writeFileSync } from 'node:fs';
 import { Api } from 'node-telegram-bot-api';
 import { CORP_CLS, dartUrl, dateArg, fetchAll, fetchDocumentText, prettyDate, reportName } from './dart.js';
 
@@ -18,6 +19,22 @@ const WATCHLIST = {
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const MAX_LEN = 4096; // 텔레그램 sendMessage 글자 수 한도
+
+// 보낸 공시의 접수번호(rcept_no) 목록. 접수번호는 공시마다 하나라서 이것으로 중복을 가린다.
+const SENT_FILE = new URL('sent.json', import.meta.url);
+
+function loadSent() {
+  try {
+    return new Set(JSON.parse(readFileSync(SENT_FILE, 'utf8')));
+  } catch (err) {
+    if (err.code === 'ENOENT') return new Set();
+    throw new Error(`sent.json 을 읽지 못했습니다: ${err.message}`);
+  }
+}
+
+function saveSent(sent) {
+  writeFileSync(SENT_FILE, `${JSON.stringify([...sent].sort(), null, 2)}\n`);
+}
 
 // 요약 비용을 줄이려고 저가·비추론 모델을 쓰고, 원문 길이와 출력 토큰을 제한한다.
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
@@ -69,17 +86,19 @@ function formatItem(it) {
 }
 
 // 머리말 + 공시들을 메시지로 묶는다. 보통 하나지만, 한도를 넘으면 공시 단위로 나눈다.
+// 메시지마다 들어간 공시도 같이 돌려준다(보낸 것만 sent.json 에 남기려고).
 function buildMessages(date, hits) {
   const header = `📢 ${prettyDate(date)} 관심 종목 공시 ${hits.length}건`;
   const messages = [];
-  let cur = header;
+  let cur = { text: header, items: [] };
   for (const it of hits) {
     const block = formatItem(it);
-    if (cur.length + 2 + block.length > MAX_LEN) {
+    if (cur.text.length + 2 + block.length > MAX_LEN) {
       messages.push(cur);
-      cur = `${header} (이어서)`;
+      cur = { text: `${header} (이어서)`, items: [] };
     }
-    cur += `\n\n${block}`;
+    cur.text += `\n\n${block}`;
+    cur.items.push(it);
   }
   messages.push(cur);
   return messages;
@@ -92,8 +111,13 @@ async function main() {
     process.exit(1);
   }
   const all = await fetchAll(date);
-  const hits = all.filter((it) => it.stock_code in WATCHLIST);
-  console.log(`${prettyDate(date)} 관심 종목 공시 ${hits.length}건 (전체 ${all.length}건)`);
+  const matched = all.filter((it) => it.stock_code in WATCHLIST);
+  const sent = loadSent();
+  const hits = matched.filter((it) => !sent.has(it.rcept_no));
+  console.log(
+    `${prettyDate(date)} 관심 종목 공시 ${matched.length}건 (전체 ${all.length}건), ` +
+      `이미 보낸 것 ${matched.length - hits.length}건 빼고 새로 보낼 것 ${hits.length}건`,
+  );
   if (hits.length === 0) return;
   if (OPENROUTER_KEY) {
     let cost = 0;
@@ -112,12 +136,15 @@ async function main() {
   }
   const telegram = new Api(BOT_TOKEN, { maxRetries: 0 }); // 기존처럼 실패 시 재전송 없이 종료한다.
   const messages = buildMessages(date, hits);
-  for (const text of messages) {
+  for (const { text, items } of messages) {
     await telegram.sendMessage({
       chat_id: CHAT_ID,
       text,
       link_preview_options: { is_disabled: true },
     });
+    // 메시지 하나가 갈 때마다 남긴다. 뒤 메시지가 실패해도 이미 간 공시는 다시 보내지 않는다.
+    for (const it of items) sent.add(it.rcept_no);
+    saveSent(sent);
   }
   for (const it of hits) console.log(`  포함: ${it.corp_name} — ${reportName(it)}`);
   console.log(`메시지 ${messages.length}개로 보냄`);

@@ -3,7 +3,7 @@
 - 정한 날: 2026-10-03
 - 누가 정함: 항목마다 다르다. 각 항목 끝 괄호에 적었다. 근거는 아래 "근거" 참고.
 - 상태: 유지
-- 관련: [[index]], [[log]], [[markets-filter]], [[env-not-committed]], [[file-structure]]
+- 관련: [[index]], [[log]], [[markets-filter]], [[env-not-committed]], [[file-structure]], [[sent-dedup]]
 
 ## 결정
 
@@ -14,7 +14,7 @@
 - 그날(기본: 오늘, KST) 공시를 본다. 사용법은 `node notify.js [YYYYMMDD]`. (확인 안 됨)
 - 관심 종목은 삼성전자(005930), 카카오(035720), 에코프로비엠(247540) 세 개로 시작한다. `notify.js` 의 `WATCHLIST` 에 있다. (사용자)
 - 관심 종목은 회사 이름이 아니라 종목코드(`stock_code`)로 맞춘다. (AI 기본값)
-- 중복 처리는 아직 하지 않는다. 한 번 실행하면 그날 공시를 한 번 보낸다. 다시 실행하면 같은 공시를 또 보낸다. 중복 처리는 나중에 하기로 했다. (사용자)
+- ~~중복 처리는 아직 하지 않는다. 한 번 실행하면 그날 공시를 한 번 보낸다. 다시 실행하면 같은 공시를 또 보낸다. 중복 처리는 나중에 하기로 했다. (사용자)~~ → 2026-10-03 바뀜: 한 번 보낸 공시는 다시 보내지 않는다. (사용자) [[sent-dedup]] 참고.
 - ~~의존성은 추가하지 않는다. 텔레그램 Bot API 는 Node 내장 `fetch` 로 부른다. (사용자)~~ → 2026-10-03 바뀜: `node-telegram-bot-api` 의존성을 추가하고 `sendMessage()`로 보낸다. (사용자) [[telegram-library]] 참고.
 - 텔레그램 비밀값은 `.env` 의 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` 에 둔다. (사용자)
 - 공시 조회 코드는 `dart.js` 로 옮겨 `index.js` 와 `notify.js` 가 같이 쓴다. (사용자. 처음에는 AI 기본값이었다.)
