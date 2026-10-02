@@ -12,4 +12,6 @@ if [ -n "$global" ] && [ -x "$global/pre-commit" ]; then
   fi
 fi
 
-node "$(git rev-parse --show-toplevel)/scripts/check-wiki.mjs"
+top=$(git rev-parse --show-toplevel)
+node "$top/scripts/check-secrets.mjs" || exit 1
+node "$top/scripts/check-wiki.mjs"

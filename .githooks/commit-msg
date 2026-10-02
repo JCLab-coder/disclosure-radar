@@ -1,0 +1,15 @@
+#!/bin/sh
+# 이 저장소의 commit-msg 훅. 커밋 메시지에 .env 의 실제 값이 들어가면 막는다.
+# pre-commit 과 같이 전역 commit-msg 가 있으면 먼저 부른다.
+
+global=$(git config --global --get core.hooksPath)
+case "$global" in "~/"*) global="$HOME/${global#~/}" ;; esac
+if [ -n "$global" ] && [ -x "$global/commit-msg" ]; then
+  here=$(cd "$(dirname "$0")" && pwd -P)
+  there=$(cd "$global" && pwd -P)
+  if [ "$here" != "$there" ]; then
+    "$global/commit-msg" "$@" || exit 1
+  fi
+fi
+
+node "$(git rev-parse --show-toplevel)/scripts/check-secrets.mjs" "$1"
