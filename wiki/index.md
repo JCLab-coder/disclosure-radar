@@ -14,7 +14,7 @@
 - [[sent-dedup]] (사용자, 방법은 AI 기본값): 보낸 접수번호를 `sent.json` 에 남겨 다시 보내지 않는다. 동시 실행은 `sent.lock` 으로 막는다.
 - [[daily-message-limit]] (사용자, 세부는 AI 기본값): 하루(보내는 날, KST) 메시지 20개까지. 센 값은 `sent-count.json`. 못 보낸 공시는 다음 날 간다.
 - [[railway-deploy]] (항목마다): Railway 에서 KST 평일 08:00~19:00 30분마다 `node notify.js`. 키는 서버 변수, 상태 파일은 볼륨 `/data`(`STATE_DIR`).
-- [[wiki-check-hook]] (사용자, 방법은 AI 기본값): 커밋 전 훅(`.githooks/`)이 변경 기록 지난 줄, 결정 페이지 근거 줄, 없는 페이지 링크(`scripts/check-wiki.mjs`)와 커밋·커밋 메시지에 든 `.env` 실제 값(`scripts/check-secrets.mjs`, 값은 찍지 않음)을 점검해 막는다. 새로 받은 저장소에서는 `git config core.hooksPath .githooks` 로 켠다.
+- [[wiki-check-hook]] (사용자, 방법은 AI 기본값): 커밋 전 훅(`.githooks/`)이 변경 기록 지난 줄, 결정 페이지 근거 줄, 없는 페이지 링크(`scripts/check-wiki.mjs`)와 커밋·커밋 메시지에 든 `.env` 실제 값(`scripts/check-secrets.mjs`, 값은 찍지 않음)을 점검해 막는다. 점검 스크립트는 마지막 커밋에 있는 것을 돌리고, 점검 장치·규칙 파일이 바뀌는 커밋은 메시지에 `[점검·규칙 변경]` 을 붙인다(`scripts/check-guard.mjs`). 새로 받은 저장소에서는 `git config core.hooksPath .githooks` 로 켠다.
 - [[env-not-committed]] (항목마다): `.env`·`node_modules/`·`wiki/.obsidian/` 은 커밋하지 않는다. 비밀값은 위키에도 적지 않는다.
 
 ## 자료 (references/)
@@ -31,6 +31,7 @@
 이전에 한 실수다. 비슷한 작업 전에 읽는다.
 
 - [[concurrent-runs]]: 차례로 두 번 돌린 것은 동시 실행 확인이 아니다. 상태 파일의 읽기~쓰기를 통째로 잠그고, 결과는 실제 전송 횟수로 본다.
+- [[checker-self-edit]]: 점검에 막히면 규칙 파일·점검 장치를 고쳐 통과시키지 않고 사용자에게 묻는다. 장치를 바꿀 일이 있으면 그것만 따로 커밋한다.
 
 ## 쓰는 규칙
 
