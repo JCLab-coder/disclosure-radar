@@ -24,7 +24,7 @@
 
 - [[opendart-document-api]]: OpenDART 공시서류원본 API(`document.xml`)의 응답 형식. zip 안에 `<접수번호>.xml` 하나, UTF-8, HTML 형식과 dart4 XML 형식이 있다. 호출 한도는 오픈API 전체 합쳐 하루 20,000건(공식 FAQ, 2026-10-03 확인), 넘으면 오류 코드 `020`.
 - [[railway-cron]]: Railway 크론(UTC, 5분 이상 간격, 앞 실행 중이면 건너뜀), `railway.json` 2026-12-01 지원 종료, API 로 서비스 설정·즉시 실행하는 법(2026-10-03 확인).
-- [[api-keys]]: 키 네 개(`OPENDART_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `OPENROUTER_API_KEY`)의 이름과 받는 곳, 다른 컴퓨터에서 돌리는 순서(2026-10-03 확인). 값은 적지 않는다.
+- [[api-keys]]: 키 네 개(`OPENDART_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `OPENROUTER_API_KEY`)의 이름과 받는 곳, 기존 배포 기록의 서버 변수 위치와 새 컴퓨터의 `.env` 로 옮겨 실행하는 순서(2026-10-03 보완). 값은 적지 않는다. 새 컴퓨터 실행과 현재 서버 설정은 이번에 확인하지 않았다.
 - [[openrouter-models]]: OpenRouter 저가 모델과 요금(2026-10-03 기준), 요약에 쓰는 `chat/completions` 호출.
 
 ## 교훈 (lessons/)

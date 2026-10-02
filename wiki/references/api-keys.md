@@ -22,12 +22,19 @@
 
 - 지금 쓰는 값은 이 컴퓨터의 `.env` 와 Railway 서버 변수에 있다([[railway-deploy]]). 서버 변수에는 이 넷 말고도 `STATE_DIR=/data`, `WEEKDAY_HOURS_ONLY=1` 이 있는데, 이 둘은 비밀값이 아니고 서버에서만 쓴다.
 
+## 기존 서버의 값을 다른 컴퓨터로 옮기기
+
+- [[railway-deploy]] 에 기록된 위치는 Railway 프로젝트 `disclosure-radar`, 서비스 `disclosure-radar`, 환경 `production` 의 서버 변수다. 위 표의 네 이름에 해당하는 값을 찾아 새 컴퓨터의 프로젝트 폴더 `.env` 에 각각 넣는다. 기존 컴퓨터의 `.env` 를 비공개로 옮겨도 된다.
+- 위키에는 실제 값 대신 아래 `.env` 틀만 남긴다. 값을 채운 파일은 커밋하지 않는다. 새 컴퓨터에서도 `git check-ignore .env` 결과가 `.env` 인지 확인한다.
+- 로컬에서 수동 실행하려면 키 네 개만 옮긴다. 서버용 `STATE_DIR=/data` 와 `WEEKDAY_HOURS_ONLY=1` 은 옮기지 않는다. 로컬 상태 파일은 기본으로 프로젝트 폴더에 생기며, 서버와 기록을 공유하지 않는다.
+- 이 위치는 기존 배포 기록을 근거로 적었다. 이번 문서 보완에서는 서버 변수나 로컬 `.env` 의 실제 값을 읽거나 비교하지 않았다.
+
 ## 다른 컴퓨터에서 돌리기
 
 1. 이 저장소를 받는다. 2026-10-03 에는 원격 저장소가 없다(`git remote -v` 결과가 비어 있음).
 2. Node 21.7 이상을 쓴다(`package.json` 의 `engines`, `process.loadEnvFile` 때문). 이 컴퓨터는 v25.9.0 이다.
 3. `npm install` 을 한다(`node-telegram-bot-api`).
-4. 프로젝트 폴더에 `.env` 를 만든다. `.env` 는 커밋하지 않는다([[env-not-committed]]).
+4. 프로젝트 폴더에 `.env` 를 만들고 위 절차로 가져온 네 값을 채운다. 아래 `<값>` 은 자리 표시자다. `.env` 는 커밋하지 않는다([[env-not-committed]]).
 
    ```
    OPENDART_API_KEY=<값>
@@ -42,6 +49,7 @@
 
 ## 직접 확인한 것
 
+- 2026-10-03 문서 보완: `rg -n 'process.env|loadEnvFile|STATE_DIR|WEEKDAY_HOURS_ONLY' dart.js notify.js index.js` 로 코드 파일 3개의 환경 변수 사용 위치를 확인했다. 키 네 개의 이름, `.env` 로딩, 서버용 변수 두 개를 위 안내와 대조했다. `cat package.json .gitignore` 로 Node 요구 버전과 `.env` 제외 설정을 읽었고, `git check-ignore .env` 결과는 `.env` 였다. 새 컴퓨터에서의 실행이나 현재 서버 설정은 확인하지 않았다.
 - 2026-10-03 위 출처 페이지 네 개를 열어 받는 곳을 확인했다. OpenDART 는 메인 페이지 메뉴에 "인증키 신청"이 있다. 텔레그램은 `/newbot` 으로 토큰을 받고, `/token` 으로 새로 받는다. `getUpdates` 의 결과에서 Message 의 `chat` 은 Chat 객체이고, 그 `id` 가 대화방 id 다. OpenRouter 는 keys 페이지에서 키를 만들고 Bearer 헤더로 보낸다.
 - 2026-10-03 `grep -n "process.env" *.js` 로 코드가 읽는 변수를 봤다. 키 네 개와 `STATE_DIR`, `WEEKDAY_HOURS_ONLY` 다.
 - 2026-10-03 값을 가리고(`sed 's/=.*/=<hidden>/' .env`) 이 컴퓨터 `.env` 의 이름을 봤다. 위 네 개다.
