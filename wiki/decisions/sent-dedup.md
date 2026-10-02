@@ -3,7 +3,7 @@
 - 정한 날: 2026-10-03
 - 누가 정함: 항목마다 다르다. 각 항목 끝 괄호에 적었다. 근거는 아래 "근거" 참고.
 - 상태: 유지
-- 관련: [[index]], [[log]], [[watchlist-telegram]], [[disclosure-summary]], [[env-not-committed]], [[concurrent-runs]], [[daily-message-limit]]
+- 관련: [[index]], [[log]], [[watchlist-telegram]], [[disclosure-summary]], [[env-not-committed]], [[concurrent-runs]], [[daily-message-limit]], [[railway-deploy]]
 
 ## 결정
 
@@ -23,6 +23,8 @@
   - 공시 목록 조회(OpenDART)는 잠금 밖에서 한다. 요약(OpenRouter)과 전송은 잠금 안에서 한다. 요약할 공시는 `sent.json` 을 읽어야 정해지기 때문이다. (AI 기본값)
   - `sent.lock` 도 `.gitignore` 에 넣었다. (AI 기본값)
 - `sent.json` 이 깨져 읽을 수 없으면 요약·전송 없이 오류로 끝난다(종료 코드 1). 빈 목록으로 보고 계속하면 그날 공시가 모두 다시 가기 때문이다. 사람이 고치거나 지울 때까지 알림이 멈춘다. (AI 기본값)
+
+- 2026-10-03 덧붙임: 서버(Railway)에서는 `sent.json`·`sent.lock` 을 볼륨 `/data` 에 둔다. `STATE_DIR` 변수가 있으면 그 폴더, 없으면 전처럼 프로젝트 폴더다. `sent.lock` 에 적힌 pid 가 자기 pid 와 같으면 남은 잠금으로 보고 치운다(컨테이너에서 pid 가 겹칠 수 있다). 서버와 로컬은 `sent.json` 을 따로 가진다. [[railway-deploy]] 참고. (AI 기본값)
 
 ## 이유
 

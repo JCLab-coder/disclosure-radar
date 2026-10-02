@@ -3,7 +3,12 @@
 
 import { inflateRawSync } from 'node:zlib';
 
-process.loadEnvFile(new URL('.env', import.meta.url));
+// 서버(Railway)에는 .env 가 없고 키는 서버 변수로 들어온다. 그래서 .env 가 없으면 넘어간다.
+try {
+  process.loadEnvFile(new URL('.env', import.meta.url));
+} catch (err) {
+  if (err.code !== 'ENOENT') throw err;
+}
 
 const API_KEY = process.env.OPENDART_API_KEY;
 const ENDPOINT = 'https://opendart.fss.or.kr/api/list.json';

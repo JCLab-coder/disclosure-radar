@@ -3,7 +3,7 @@
 - 정한 날: 2026-10-03
 - 누가 정함: 항목마다 다르다. 각 항목 끝 괄호에 적었다. 근거는 아래 "근거" 참고.
 - 상태: 유지
-- 관련: [[index]], [[log]], [[watchlist-telegram]], [[sent-dedup]], [[disclosure-summary]], [[concurrent-runs]]
+- 관련: [[index]], [[log]], [[watchlist-telegram]], [[sent-dedup]], [[disclosure-summary]], [[concurrent-runs]], [[railway-deploy]]
 
 ## 결정
 
@@ -19,6 +19,8 @@
 - 한 실행 중간에 한도에 닿으면 남은 메시지는 보내지 않고, 남은 메시지 수와 공시 건수를 출력한다. 이때 못 보낸 공시도 이미 요약은 한 상태라 그 요약 비용은 든다. (AI 기본값)
 - `sent-count.json` 이 깨졌거나 형식이 맞지 않으면 보내지 않고 오류로 끝난다(종료 코드 1). [[sent-dedup]] 의 깨진 `sent.json` 처리와 같게 했다. (AI 기본값)
 - 한도 20 은 `notify.js` 의 `DAILY_LIMIT` 에 있다. (AI 기본값)
+
+- 2026-10-03 덧붙임: 서버(Railway)에서는 `sent-count.json` 을 볼륨 `/data` 에 둔다(`STATE_DIR`). 서버와 로컬은 따로 센다. [[railway-deploy]] 참고. (AI 기본값)
 
 ## 이유
 

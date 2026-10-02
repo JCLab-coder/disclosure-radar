@@ -6,8 +6,11 @@
 // 한 번 보낸 공시(접수번호)는 sent.json 에 남기고 다시 보내지 않는다. 새 공시가 없으면 아무것도 보내지 않는다.
 // 동시에 여러 번 실행되면 sent.lock 으로 한 번에 하나씩 돌게 한다(뒤 실행은 기다렸다가 sent.json 을 다시 읽는다).
 // 하루(보내는 날, KST)에 메시지를 20개까지만 보낸다. 센 값은 sent-count.json 에 있다. 못 보낸 공시는 다음 날 간다.
+// 상태 파일(sent.json, sent-count.json, sent.lock)은 STATE_DIR(없으면 이 폴더)에 둔다. 서버에서는 볼륨(/data)이다.
+// WEEKDAY_HOURS_ONLY=1 이면 KST 평일 08:00~19:00 이 아닐 때 아무것도 하지 않고 끝난다(서버 크론용).
 
-import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { Api } from 'node-telegram-bot-api';
 import { CORP_CLS, dartUrl, dateArg, fetchAll, fetchDocumentText, prettyDate, reportName, todayKST } from './dart.js';
 
@@ -22,8 +25,11 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const MAX_LEN = 4096; // 텔레그램 sendMessage 글자 수 한도
 
+// 상태 파일을 두는 폴더. 서버 컨테이너의 파일은 실행이 끝나면 사라지므로, 서버에서는 볼륨 경로를 준다.
+const STATE_DIR = process.env.STATE_DIR ? pathToFileURL(`${process.env.STATE_DIR.replace(/\/+$/, '')}/`) : new URL('.', import.meta.url);
+
 // 보낸 공시의 접수번호(rcept_no) 목록. 접수번호는 공시마다 하나라서 이것으로 중복을 가린다.
-const SENT_FILE = new URL('sent.json', import.meta.url);
+const SENT_FILE = new URL('sent.json', STATE_DIR);
 
 function loadSent() {
   try {
@@ -40,7 +46,7 @@ function saveSent(sent) {
 
 // 하루에 보낸 메시지 수. 공시 날짜가 아니라 보내는 날(KST) 기준으로 센다.
 // 날짜가 바뀌면 0부터 다시 센다. 읽기·쓰기는 sent.json 과 같이 sent.lock 안에서만 한다.
-const COUNT_FILE = new URL('sent-count.json', import.meta.url);
+const COUNT_FILE = new URL('sent-count.json', STATE_DIR);
 const DAILY_LIMIT = 20;
 
 function loadCount(today) {
@@ -63,7 +69,7 @@ function saveCount(today, count) {
 
 // 동시에 두 번 실행되면 둘 다 같은 sent.json 을 읽고 같은 공시를 보낸다.
 // sent.json 읽기부터 마지막 기록까지를 잠금 파일로 감싸, 뒤 실행은 앞 실행이 끝날 때까지 기다린다.
-const LOCK_FILE = new URL('sent.lock', import.meta.url);
+const LOCK_FILE = new URL('sent.lock', STATE_DIR);
 const LOCK_WAIT_MS = 10 * 60 * 1000; // 이만큼 기다려도 못 잡으면 보내지 않고 끝낸다
 const LOCK_POLL_MS = 500;
 
@@ -94,7 +100,8 @@ async function acquireLock() {
       throw err;
     }
     // 잠근 실행이 강제 종료돼 남은 잠금이면 치우고 다시 잡는다.
-    if (pid > 0 && !isAlive(pid)) {
+    // 컨테이너에서는 새 실행의 pid 가 남은 잠금의 pid 와 같을 수 있다(예: 둘 다 1). 자기 pid 면 남은 잠금이다.
+    if (pid > 0 && (pid === process.pid || !isAlive(pid))) {
       console.error(`이전 실행(pid ${pid})이 남긴 sent.lock 을 지웁니다.`);
       rmSync(LOCK_FILE, { force: true });
       continue;
@@ -182,7 +189,21 @@ function buildMessages(date, hits) {
   return messages;
 }
 
+// KST 평일 08:00~19:00 인지. Railway 크론은 UTC 이고 식이 하나뿐이라 넓게 잡고 여기서 거른다.
+// 크론이 몇 분 늦게 돌 수 있어 19시대는 19:30 전까지 받는다(19:30 실행은 거른다).
+function inWeekdayHoursKST(now = new Date()) {
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const day = kst.getUTCDay(); // 0 일요일 … 6 토요일
+  const h = kst.getUTCHours();
+  const m = kst.getUTCMinutes();
+  return day >= 1 && day <= 5 && ((h >= 8 && h < 19) || (h === 19 && m < 30));
+}
+
 async function main() {
+  if (process.env.WEEKDAY_HOURS_ONLY === '1' && !inWeekdayHoursKST()) {
+    console.log(`KST 평일 08:00~19:00 이 아니라 실행하지 않습니다. (지금 UTC ${new Date().toISOString()})`);
+    return;
+  }
   const date = dateArg();
   if (!BOT_TOKEN || !CHAT_ID) {
     console.error('.env 에 TELEGRAM_BOT_TOKEN 과 TELEGRAM_CHAT_ID 가 필요합니다.');
@@ -190,6 +211,7 @@ async function main() {
   }
   const all = await fetchAll(date);
   const matched = all.filter((it) => it.stock_code in WATCHLIST);
+  mkdirSync(STATE_DIR, { recursive: true });
   await acquireLock();
   try {
     await sendNew(date, all, matched);
