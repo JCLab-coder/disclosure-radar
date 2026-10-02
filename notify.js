@@ -1,4 +1,5 @@
 // 관심 종목에 특정 날짜(기본: 오늘, KST)의 공시가 있으면 텔레그램으로 보낸다.
+// 한 번 실행에 메시지 하나로 모아 보낸다. 텔레그램 한도(4096자)를 넘을 때만 공시 단위로 나눈다.
 // 사용법: node notify.js [YYYYMMDD]
 // 공시 조회(OpenDART 호출)는 dart.js 에 있다. 공시 목록 출력은 index.js.
 // 중복 처리는 아직 없다. 실행할 때마다 그날 공시를 모두 다시 보낸다.
@@ -14,6 +15,7 @@ const WATCHLIST = {
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const MAX_LEN = 4096; // 텔레그램 sendMessage 글자 수 한도
 
 async function sendTelegram(text) {
   const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -25,15 +27,32 @@ async function sendTelegram(text) {
   if (!data.ok) throw new Error(`텔레그램 오류 [${data.error_code}] ${data.description}`);
 }
 
-function format(date, it) {
+function formatItem(it) {
   const cls = CORP_CLS[it.corp_cls] ?? it.corp_cls;
   const rm = it.rm ? ` [${it.rm}]` : '';
   return [
-    `📢 ${it.corp_name} (${cls}) 공시`,
+    `▪️ ${it.corp_name} (${cls})`,
     `${reportName(it)}${rm}`,
-    `${prettyDate(date)} · 제출인: ${it.flr_nm}`,
+    `제출인: ${it.flr_nm}`,
     dartUrl(it),
   ].join('\n');
+}
+
+// 머리말 + 공시들을 메시지로 묶는다. 보통 하나지만, 한도를 넘으면 공시 단위로 나눈다.
+function buildMessages(date, hits) {
+  const header = `📢 ${prettyDate(date)} 관심 종목 공시 ${hits.length}건`;
+  const messages = [];
+  let cur = header;
+  for (const it of hits) {
+    const block = formatItem(it);
+    if (cur.length + 2 + block.length > MAX_LEN) {
+      messages.push(cur);
+      cur = `${header} (이어서)`;
+    }
+    cur += `\n\n${block}`;
+  }
+  messages.push(cur);
+  return messages;
 }
 
 async function main() {
@@ -45,10 +64,11 @@ async function main() {
   const all = await fetchAll(date);
   const hits = all.filter((it) => it.stock_code in WATCHLIST);
   console.log(`${prettyDate(date)} 관심 종목 공시 ${hits.length}건 (전체 ${all.length}건)`);
-  for (const it of hits) {
-    await sendTelegram(format(date, it));
-    console.log(`  보냄: ${it.corp_name} — ${reportName(it)}`);
-  }
+  if (hits.length === 0) return;
+  const messages = buildMessages(date, hits);
+  for (const text of messages) await sendTelegram(text);
+  for (const it of hits) console.log(`  포함: ${it.corp_name} — ${reportName(it)}`);
+  console.log(`메시지 ${messages.length}개로 보냄`);
 }
 
 main().catch((err) => {
