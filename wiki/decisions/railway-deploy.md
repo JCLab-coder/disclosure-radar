@@ -45,6 +45,11 @@
   - 2번째(UTC 16:59:34, 같은 배포): "이미 보낸 것 1건 빼고 새로 보낼 것 0건". 1번째 실행이 볼륨에 쓴 `sent.json` 을 2번째 실행(새 컨테이너)이 읽었다.
   - 텔레그램 대화방에 메시지가 실제로 도착했는지는 이 세션에서 직접 보지 않았다. 서버 로그의 "메시지 1개로 보냄"은 `sendMessage` 가 성공했을 때만 나온다.
   - `railway volume files --volume disclosure-radar-volume list /` 는 "Failed to initialize SFTP session … Timeout" 으로 실패해 볼륨 파일 목록은 이 명령으로 보지 못했다.
+- 2026-10-03 서버 볼륨 내용과 서버 코드(진짜): 커밋 `acadc2a` 를 만든 뒤(작업 트리에는 커밋 안 하는 `wiki/.obsidian/` 만 남음) 시작 명령을 잠깐 파일 해시·`/data` 목록·내용을 출력하는 `sh -c '…'` 로 바꾸고 `railway up` 해서 한 번 실행했다(배포 `a056c97d`).
+  - `/data`: `sent.json` 은 `["20261002800981"]`, `sent-count.json` 은 date `20261003`, count `1`. `sent.lock` 은 없었다.
+  - 서버 `/app` 의 파일(`node_modules` 제외) 28개의 sha256 과 `git show acadc2a:<파일>` 의 sha256 을 비교했다. 커밋 파일 23개 중 23개가 같았다(`dart.js`, `index.js`, `notify.js`, `package.json`, `package-lock.json`, `.gitignore`, `CLAUDE.md`, `AGENTS.md`, 위키 15개). 서버에만 있는 5개는 커밋하지 않은 `wiki/.obsidian/*.json` 이다. `.env`·`sent.json`·`sent-count.json` 은 올라가지 않았다.
+  - 그 뒤 시작 명령을 `node notify.js` 로 되돌리고 같은 작업 트리(HEAD `acadc2a`, `git status` 는 `wiki/.obsidian/` 만)를 다시 `railway up` 했다(배포 `5c24e175`). 이 마지막 배포의 파일 해시는 직접 보지 않았다. 같은 작업 트리를 한 번 더 올린 것이다. `deployment.meta` 의 `startCommand` `node notify.js`, `cronSchedule` `*/30 0-10,23 * * 0-5`, `restartPolicyType` `NEVER`. 바로 한 번 실행하니 "KST 평일 08:00~19:00 이 아니라 실행하지 않습니다".
+  - 처음에는 시작 명령만 바꾸고 `railway deployment redeploy` 를 했는데, 이전 배포의 설정(시작 명령 `node notify.js`)이 그대로 쓰였다. 그래서 진단은 `railway up` 으로 다시 했다. [[railway-cron]] 참고.
 - 확인하지 않은 것: 실제 평일 크론 23번이 모두 도는지, 크론이 몇 분까지 늦는지, 실행 중 컨테이너가 죽었을 때 남은 잠금 처리(서버에서), 2026-12-01 이후 서비스 설정이 그대로인지.
 
 ## 근거
