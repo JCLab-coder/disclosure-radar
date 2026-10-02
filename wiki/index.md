@@ -19,7 +19,7 @@
 
 결정이 아니라 작업하다 알아낸 자료다. 출처와 확인한 날짜가 적혀 있다.
 
-- [[opendart-document-api]]: OpenDART 공시서류원본 API(`document.xml`)의 응답 형식. zip 안에 `<접수번호>.xml` 하나, UTF-8, HTML 형식과 dart4 XML 형식이 있다.
+- [[opendart-document-api]]: OpenDART 공시서류원본 API(`document.xml`)의 응답 형식. zip 안에 `<접수번호>.xml` 하나, UTF-8, HTML 형식과 dart4 XML 형식이 있다. 호출 한도는 오픈API 전체 합쳐 하루 20,000건(공식 FAQ, 2026-10-03 확인), 넘으면 오류 코드 `020`.
 - [[openrouter-models]]: OpenRouter 저가 모델과 요금(2026-10-03 기준), 요약에 쓰는 `chat/completions` 호출.
 
 ## 쓰는 규칙
