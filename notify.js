@@ -4,8 +4,9 @@
 // 사용법: node notify.js [YYYYMMDD]
 // 공시 조회(OpenDART 호출)는 dart.js 에 있다. 공시 목록 출력은 index.js.
 // 한 번 보낸 공시(접수번호)는 sent.json 에 남기고 다시 보내지 않는다. 새 공시가 없으면 아무것도 보내지 않는다.
+// 동시에 여러 번 실행되면 sent.lock 으로 한 번에 하나씩 돌게 한다(뒤 실행은 기다렸다가 sent.json 을 다시 읽는다).
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { Api } from 'node-telegram-bot-api';
 import { CORP_CLS, dartUrl, dateArg, fetchAll, fetchDocumentText, prettyDate, reportName } from './dart.js';
 
@@ -34,6 +35,59 @@ function loadSent() {
 
 function saveSent(sent) {
   writeFileSync(SENT_FILE, `${JSON.stringify([...sent].sort(), null, 2)}\n`);
+}
+
+// 동시에 두 번 실행되면 둘 다 같은 sent.json 을 읽고 같은 공시를 보낸다.
+// sent.json 읽기부터 마지막 기록까지를 잠금 파일로 감싸, 뒤 실행은 앞 실행이 끝날 때까지 기다린다.
+const LOCK_FILE = new URL('sent.lock', import.meta.url);
+const LOCK_WAIT_MS = 10 * 60 * 1000; // 이만큼 기다려도 못 잡으면 보내지 않고 끝낸다
+const LOCK_POLL_MS = 500;
+
+function isAlive(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    return err.code === 'EPERM';
+  }
+}
+
+async function acquireLock() {
+  const deadline = Date.now() + LOCK_WAIT_MS;
+  let told = false;
+  for (;;) {
+    try {
+      writeFileSync(LOCK_FILE, `${process.pid}\n`, { flag: 'wx' }); // 이미 있으면 EEXIST
+      return;
+    } catch (err) {
+      if (err.code !== 'EEXIST') throw err;
+    }
+    let pid;
+    try {
+      pid = Number(readFileSync(LOCK_FILE, 'utf8'));
+    } catch (err) {
+      if (err.code === 'ENOENT') continue; // 그사이 풀렸다
+      throw err;
+    }
+    // 잠근 실행이 강제 종료돼 남은 잠금이면 치우고 다시 잡는다.
+    if (pid > 0 && !isAlive(pid)) {
+      console.error(`이전 실행(pid ${pid})이 남긴 sent.lock 을 지웁니다.`);
+      rmSync(LOCK_FILE, { force: true });
+      continue;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`다른 실행(pid ${pid})이 ${LOCK_WAIT_MS / 60000}분 넘게 sent.lock 을 잡고 있습니다.`);
+    }
+    if (!told) {
+      console.log(`다른 실행(pid ${pid})이 끝나기를 기다립니다.`);
+      told = true;
+    }
+    await new Promise((r) => setTimeout(r, LOCK_POLL_MS));
+  }
+}
+
+function releaseLock() {
+  rmSync(LOCK_FILE, { force: true });
 }
 
 // 요약 비용을 줄이려고 저가·비추론 모델을 쓰고, 원문 길이와 출력 토큰을 제한한다.
@@ -112,6 +166,16 @@ async function main() {
   }
   const all = await fetchAll(date);
   const matched = all.filter((it) => it.stock_code in WATCHLIST);
+  await acquireLock();
+  try {
+    await sendNew(date, all, matched);
+  } finally {
+    releaseLock();
+  }
+}
+
+// sent.json 을 읽어 새 공시만 요약·전송하고 기록한다. 잠금을 잡은 상태에서만 부른다.
+async function sendNew(date, all, matched) {
   const sent = loadSent();
   const hits = matched.filter((it) => !sent.has(it.rcept_no));
   console.log(
