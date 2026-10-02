@@ -16,7 +16,7 @@
 - [[disclosure-summary]] (항목마다 다름): 관심 종목 공시마다 원문(OpenDART `document.xml`)을 OpenRouter 저가 모델(`google/gemini-2.5-flash-lite`)로 세 줄 요약해 메시지에 넣는다. 원문 6000자·출력 300 토큰 제한. 요약이 실패하면 요약 없이 보낸다.
 - [[file-structure]] (사용자): 코드는 `dart.js`(공시 조회)·`index.js`(목록 출력)·`notify.js`(텔레그램 알림) 셋으로 둔다. 조회 코드를 `notify.js` 로 합치지 않는다.
 - [[railway-deploy]] (항목마다 다름): Railway 서버에서 KST 평일 08:00~19:00 30분마다 `node notify.js` 를 돌린다. 키는 서버 변수. 크론은 UTC `*/30 0-10,23 * * 0-5` 로 넓게 잡고 `WEEKDAY_HOURS_ONLY=1` 로 코드에서 거른다. 상태 파일은 볼륨 `/data`(`STATE_DIR`). 서버에서 크론 실행 1번과 거르기 1번을 확인했다(공시 0건이라 전송은 서버에서 확인하지 않음).
-- [[env-not-committed]] (확인 안 됨): `.env`(API 키)와 `node_modules/`는 커밋하지 않는다.
+- [[env-not-committed]] (항목마다 다름): `.env`(API 키)와 `node_modules/`, `wiki/.obsidian/`(옵시디언 개인 설정)은 커밋하지 않는다. 키 같은 비밀값은 위키에도 적지 않고 이름과 받는 곳만 적는다.
 
 ## 자료 (references/)
 
@@ -24,6 +24,7 @@
 
 - [[opendart-document-api]]: OpenDART 공시서류원본 API(`document.xml`)의 응답 형식. zip 안에 `<접수번호>.xml` 하나, UTF-8, HTML 형식과 dart4 XML 형식이 있다. 호출 한도는 오픈API 전체 합쳐 하루 20,000건(공식 FAQ, 2026-10-03 확인), 넘으면 오류 코드 `020`.
 - [[railway-cron]]: Railway 크론(UTC, 5분 이상 간격, 앞 실행 중이면 건너뜀), `railway.json` 2026-12-01 지원 종료, API 로 서비스 설정·즉시 실행하는 법(2026-10-03 확인).
+- [[api-keys]]: 키 네 개(`OPENDART_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `OPENROUTER_API_KEY`)의 이름과 받는 곳, 다른 컴퓨터에서 돌리는 순서(2026-10-03 확인). 값은 적지 않는다.
 - [[openrouter-models]]: OpenRouter 저가 모델과 요금(2026-10-03 기준), 요약에 쓰는 `chat/completions` 호출.
 
 ## 교훈 (lessons/)
@@ -43,4 +44,5 @@
 - 실수에서 얻은 교훈은 `wiki/lessons/<이름>.md` 로 따로 만든다. 무슨 일이 있었는지, 원인, 다음에 어떻게 할지, 근거를 적는다.
 - 위키에 있는 것을 물으면 근거 페이지를 달아 답하고, 위키에 없는 것은 없다고 말한다.
 - 위키에는 개인 이름이나 연락처를 적지 않는다. 공개된 공시에 나온 사람도 마찬가지다. 저장소를 나중에 공개하기 때문이다. 공시 속 사람은 접수번호로 가리킨다.
+- 키·토큰 같은 비밀값은 위키에 적지 않는다. 이름과 받는 곳만 적는다([[api-keys]]).
 - 결정을 뒤집을 때는 페이지를 지우지 않고, 바뀐 내용과 이유를 그 페이지에 덧붙인다.
