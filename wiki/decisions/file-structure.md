@@ -12,6 +12,7 @@
   - `index.js`: 공시 목록 출력. `node index.js [YYYYMMDD]`.
   - `notify.js`: 관심 종목 공시 텔레그램 알림. `node notify.js [YYYYMMDD]`.
 - 공시 조회 코드를 `notify.js` 안으로 다시 합치지 않는다.
+- 2026-10-03 덧붙임: 공시 원문(공시서류원본) 조회 `fetchDocumentText()` 도 OpenDART 호출이라 `dart.js` 에 두었다. AI 요약 호출은 알림에서만 쓰므로 `notify.js` 에 두었다. 파일은 그대로 셋이다. [[disclosure-summary]] (AI 기본값)
 - 헷갈리지 않도록 각 파일 맨 위 주석에 자기 역할과 다른 두 파일의 역할을 적는다.
 
 ## 이유
