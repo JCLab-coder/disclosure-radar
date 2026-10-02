@@ -26,6 +26,7 @@
 - 서버와 로컬은 상태 파일을 따로 가진다. 같은 날 로컬에서 `node notify.js` 를 돌리면 서버가 이미 보낸 공시가 다시 가고, 하루 20개도 따로 센다. [[sent-dedup]]·[[daily-message-limit]] 의 "다른 컴퓨터나 다른 폴더에서 같은 봇으로 실행하는 경우"에 해당한다.
 - 서버 볼륨의 `sent.json` 은 빈 상태로 시작했다. 로컬 `sent.json` 은 옮기지 않았다. 서버는 그날(KST) 공시만 보므로, 로컬에서 이미 보낸 지난 날짜 공시가 서버에서 다시 가지는 않는다.
 - 2026-10-03 위키 점검 때 서버는 현대차 추가([[watchlist-telegram]], 커밋 `550e667`, KST 03:11)를 반영하지 않은 상태였다. 마지막 배포 `5c24e175` 가 KST 02:14 에 만들어졌기 때문이다(`railway deployment list --json` 의 `createdAt` `2026-10-02T17:14:50Z`). 그래서 서버는 관심 종목 셋, 로컬은 넷을 본다. 서버 파일을 직접 열어 보지는 않았고 배포 시각으로 판단했다. 사용자가 반영을 요청했지만, 이 세션의 `railway up` 은 Claude Code 자동 모드의 권한 판정("Production Deploy")에서 막혀 실행되지 않았다. 반영하려면 사용자가 `railway up --ci -s disclosure-radar -e production` 을 돌린다.
+  - 2026-10-03 덧붙임: 사용자가 위 명령을 직접 돌려 배포 `d0489669` 가 만들어졌다("Deploy complete"). 그래서 서버도 관심 종목 넷을 본다. 다만 이것은 배포 시각과 작업 트리로 판단한 것이고, 서버 파일은 열어 보지 않았다. 아래 확인 칸 참고.
 
 ## 확인
 
@@ -51,6 +52,7 @@
   - 서버 `/app` 의 파일(`node_modules` 제외) 28개의 sha256 과 `git show acadc2a:<파일>` 의 sha256 을 비교했다. 커밋 파일 23개 중 23개가 같았다(`dart.js`, `index.js`, `notify.js`, `package.json`, `package-lock.json`, `.gitignore`, `CLAUDE.md`, `AGENTS.md`, 위키 15개). 서버에만 있는 5개는 커밋하지 않은 `wiki/.obsidian/*.json` 이다. `.env`·`sent.json`·`sent-count.json` 은 올라가지 않았다.
   - 그 뒤 시작 명령을 `node notify.js` 로 되돌리고 같은 작업 트리(HEAD `acadc2a`, `git status` 는 `wiki/.obsidian/` 만)를 다시 `railway up` 했다(배포 `5c24e175`). 이 마지막 배포의 파일 해시는 직접 보지 않았다. 같은 작업 트리를 한 번 더 올린 것이다. `deployment.meta` 의 `startCommand` `node notify.js`, `cronSchedule` `*/30 0-10,23 * * 0-5`, `restartPolicyType` `NEVER`. 바로 한 번 실행하니 "KST 평일 08:00~19:00 이 아니라 실행하지 않습니다".
   - 처음에는 시작 명령만 바꾸고 `railway deployment redeploy` 를 했는데, 이전 배포의 설정(시작 명령 `node notify.js`)이 그대로 쓰였다. 그래서 진단은 `railway up` 으로 다시 했다. [[railway-cron]] 참고.
+- 2026-10-03 현대차 추가 반영(사용자가 `railway up --ci -s disclosure-radar -e production` 을 실행): 실행 전 HEAD 는 `0dcfcce`(KST 03:20:48)였고, `git status --short` 출력이 비어 있었다. 출력은 빌드 스냅샷 60 kB, Railpack 0.40.1, node 21.7.3, 시작 명령 `node notify.js`, "Deploy complete" 였다. 그 뒤 `railway deployment list --json` 로 확인했다. 맨 위 배포는 `d0489669`(`SUCCESS`, `createdAt` `2026-10-02T18:21:27Z` = KST 03:21:27)이고, `startCommand` `node notify.js`, `cronSchedule` `*/30 0-10,23 * * 0-5`, `restartPolicyType` `NEVER`, `volumeMounts` `["/data"]` 로 전과 같았다. 이전 배포 `5c24e175` 는 `REMOVED` 였다. 서버 `/app` 의 파일 해시와 `WATCHLIST` 내용은 보지 않았다. 볼 때는 시작 명령을 잠깐 바꿔야 해서 하지 않았다. `wiki/.obsidian/` 이 빠졌는지도 보지 않았다. 반영 뒤 크론 실행(다음은 KST 2026-10-05 월 08:00)도 아직 보지 않았다.
 - 확인하지 않은 것: 실제 평일 크론 23번이 모두 도는지, 크론이 몇 분까지 늦는지, 실행 중 컨테이너가 죽었을 때 남은 잠금 처리(서버에서), 2026-12-01 이후 서비스 설정이 그대로인지.
 
 ## 근거

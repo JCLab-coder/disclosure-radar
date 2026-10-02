@@ -13,7 +13,7 @@
 - [[disclosure-summary]] (항목마다): 공시 원문을 OpenRouter `google/gemini-2.5-flash-lite` 로 세 줄 요약해 넣는다. 실패하면 요약 없이 보낸다.
 - [[sent-dedup]] (사용자, 방법은 AI 기본값): 보낸 접수번호를 `sent.json` 에 남겨 다시 보내지 않는다. 동시 실행은 `sent.lock` 으로 막는다.
 - [[daily-message-limit]] (사용자, 세부는 AI 기본값): 하루(보내는 날, KST) 메시지 20개까지. 센 값은 `sent-count.json`. 못 보낸 공시는 다음 날 간다.
-- [[railway-deploy]] (항목마다): Railway 에서 KST 평일 08:00~19:00 30분마다 `node notify.js`. 키는 서버 변수, 상태 파일은 볼륨 `/data`(`STATE_DIR`). 2026-10-03 서버에는 현대차 추가가 아직 반영되지 않았다.
+- [[railway-deploy]] (항목마다): Railway 에서 KST 평일 08:00~19:00 30분마다 `node notify.js`. 키는 서버 변수, 상태 파일은 볼륨 `/data`(`STATE_DIR`). 2026-10-03 배포 `d0489669` 로 현대차 추가를 반영했다(서버 파일 내용은 보지 않음).
 - [[wiki-check-hook]] (사용자, 방법은 AI 기본값): 커밋 전 훅(`.githooks/`)이 변경 기록 지난 줄, 결정 페이지 근거 줄, 없는 페이지 링크(`scripts/check-wiki.mjs`)와 커밋·커밋 메시지에 든 `.env` 실제 값(`scripts/check-secrets.mjs`, 값은 찍지 않음)을 점검해 막는다. 점검 스크립트는 마지막 커밋에 있는 것을 돌리고, 점검 장치·규칙 파일이 바뀌는 커밋은 메시지에 `[점검·규칙 변경]` 을 붙인다(`scripts/check-guard.mjs`). 새로 받은 저장소에서는 `git config core.hooksPath .githooks` 로 켠다.
 - [[env-not-committed]] (항목마다): `.env`·`node_modules/`·`wiki/.obsidian/` 은 커밋하지 않는다. 비밀값은 위키에도 적지 않는다.
 - [[wiki-lint]] (사용자, 시점·방법은 AI 기본값): 위키를 코드·설정·서버와 대조하는 점검 절차. 작업을 시작할 때 가벼운 점검(위키를 고치지 않고 다른 파일만 바꾼 커밋 찾기), 요청할 때 전체 점검, 배포 전후에 서버 칸. 읽기만 하고 보고한 뒤 고친다. 점검 기록이 이 페이지에 있다(`CLAUDE.md` 규칙 12).
